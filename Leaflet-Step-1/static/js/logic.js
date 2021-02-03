@@ -1,62 +1,121 @@
-function createMap(bikeStations) {
+// Creating map object
+var myMap = L.map("map-id", {
+  center: [37.0902, -95.7129],
+  zoom: 5
+});
 
-  // Create the tile layer that will be the background of our map
-  var lightmap = L.tileLayer("https://api.mapbox.com/styles/v1/mapbox/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
-    attribution: "Map data &copy; <a href=\"https://www.openstreetmap.org/\">OpenStreetMap</a> contributors, <a href=\"https://creativecommons.org/licenses/by-sa/2.0/\">CC-BY-SA</a>, Imagery © <a href=\"https://www.mapbox.com/\">Mapbox</a>",
-    maxZoom: 18,
-    id: "light-v10",
-    accessToken: API_KEY
-  });
+// Adding tile layer
+L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}", {
+  attribution: "© <a href='https://www.mapbox.com/about/maps/'>Mapbox</a> © <a href='http://www.openstreetmap.org/copyright'>OpenStreetMap</a> <strong><a href='https://www.mapbox.com/map-feedback/' target='_blank'>Improve this map</a></strong>",
+  tileSize: 512,
+  maxZoom: 18,
+  zoomOffset: -1,
+  id: "mapbox/streets-v11",
+  accessToken: API_KEY
+}).addTo(myMap);
 
-  // Create a baseMaps object to hold the lightmap layer
-  var baseMaps = {
-    "Light Map": lightmap
-  };
+// Use this link to get the geojson data.
+var link = "https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson";
 
-  // Create an overlayMaps object to hold the bikeStations layer
-  var overlayMaps = {
-    "Bike Stations": bikeStations
-  };
+// Function that will determine the color of a neighborhood based on the borough it belongs to
+function chooseColor(mag) {
+  if (mag > 5.0) {
+    return "red";
+  }  
+  else if (mag > 4.5) {
+    return "orange";
+  }
+  else if (mag > 4.0) {
+    return "yellow";
+  }
+  else if (mag > 3.5) {
+    return "#D4E4F7";
+  }
+  else if (mag > 3.0) {
+    return "#AAC5F9";
+  }  
 
-  // Create the map object with options
-  var map = L.map("map-id", {
-    center: [40.73, -74.0059],
-    zoom: 12,
-    layers: [lightmap, bikeStations]
-  });
+  else if (mag > 2.0) {
+    return "#236AB9";
+  }  
+  else if (mag > 0) {
+    return "blue";
+  }
 
-  // Create a layer control, pass in the baseMaps and overlayMaps. Add the layer control to the map
-  L.control.layers(baseMaps, overlayMaps, {
-    collapsed: false
-  }).addTo(map);
 }
 
-// Citi Bike Code from class activity
-// function createMarkers(response) {
+// Grabbing our GeoJSON data..
+d3.json(link).then(function(data) {
+  // Creating a geoJSON layer with the retrieved data
+  L.geoJson(data, {
+    // Style each feature (in this case a neighborhood)
+    pointToLayer: function(feature,latlng) {
+      return L.circleMarker(latlng)
+    },
+    style: function(feature) {
+      return {
+        color: "white",
+        // Call the chooseColor function to decide which color to color our neighborhood (color based on borough)
+        fillColor: chooseColor(feature.properties.mag),
+        fillOpacity: .75,
+        weight: 1.5,
+        radius: feature.properties.mag*5
+      };
+    },
+    // Called on each feature
+    onEachFeature: function(feature, layer) {
+      // Set mouse events to change map styling
+      // layer.on({
+      //   // When a user's mouse touches a map feature, the mouseover event calls this function, that feature's opacity changes to 90% so that it stands out
+      //   mouseover: function(event) {
+      //     layer = event.target;
+      //     layer.setStyle({
+      //       fillOpacity: 0.9
+      //     });
+      //   },
+      //   // When the cursor no longer hovers over a map feature - when the mouseout event occurs - the feature's opacity reverts back to 50%
+      //   mouseout: function(event) {
+      //     layer = event.target;
+      //     layer.setStyle({
+      //       fillOpacity: 0.5
+      //     });
+      //   },
+      //   // When a feature (neighborhood) is clicked, it is enlarged to fit the screen
+      //   click: function(event) {
+      //     myMap.fitBounds(event.target.getBounds());
+      //   }
+      // });
+      // Giving each feature a pop-up with information pertinent to it
+      layer.bindPopup("<h1>" + feature.properties.place + "</h1> <hr> <h2> Magnitude: " + feature.properties.mag + "</h2>");
 
-//   // Pull the "stations" property off of response.data
-//   var stations = response.data.stations;
+    }
+  }).addTo(myMap);
 
-//   // Initialize an array to hold bike markers
-//   var bikeMarkers = [];
+  var legend = L.control({position: 'bottomright'});
 
-//   // Loop through the stations array
-//   for (var index = 0; index < stations.length; index++) {
-//     var station = stations[index];
+  legend.onAdd = function (map) {
 
-//     // For each station, create a marker and bind a popup with the station's name
-//     var bikeMarker = L.marker([station.lat, station.lon])
-//       .bindPopup("<h3>" + station.name + "<h3><h3>Capacity: " + station.capacity + "</h3>");
+      var div = L.DomUtil.create('div', 'info legend'),
+          grades = [0, 2.0, 3.0, 3.5, 4.0, 4.5, 5.0],
+          labels = [];
+          colors = ["blue", "#236AB9", "#AAC5F9", "#D4E4F7", "yellow", "orange", "red"]
 
-//     // Add the marker to the bikeMarkers array
-//     bikeMarkers.push(bikeMarker);
-//   }
+      // loop through our density intervals and generate a label with a colored square for each interval
+      for (var i = 0; i < grades.length; i++) {
+          div.innerHTML +=
+              '<i style="background:' + colors[i] + '"></i> ' +  
+              grades[i] + (grades[i+1] ? '&ndash;' + grades[i+1] + '<br>' : '+');
+      }
 
-//   // Create a layer group made from the bike markers array, pass it into the createMap function
-//   createMap(L.layerGroup(bikeMarkers));
-// }
+      return div;
+  };
+
+  legend.addTo(myMap);
+
+});
+
 
 
 // Perform an API call to the Citi Bike API to get station information. Call createMarkers when complete
-// d3.json("https://gbfs.citibikenyc.com/gbfs/en/station_information.json").then(createMarkers);
-d3.json("http://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php").then(createMarkers);
+// d3.json("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson").then(createMarkers);
+
