@@ -96,14 +96,14 @@ d3.json(link).then(function(data) {
   legend.onAdd = function (map) {
 
       var div = L.DomUtil.create('div', 'info legend'),
-          grades = [0, 2.0, 3.0, 3.5, 4.0, 4.5, 5.0],
+          grades = [0,2.0,3.0,3.5,4.0,4.5,5.0],
           labels = [];
           colors = ["blue", "#236AB9", "#AAC5F9", "#D4E4F7", "yellow", "orange", "red"]
 
-      // loop through our density intervals and generate a label with a colored square for each interval
+      // loop through our mag and generate a label with a color for each interval.  code gathered from https://leafletjs.com/examples/choropleth/
       for (var i = 0; i < grades.length; i++) {
           div.innerHTML +=
-              '<i style="background:' + colors[i] + '"></i> ' +  
+              '<i style="background:' + colors[i] + '"></i> ' +      
               grades[i] + (grades[i+1] ? '&ndash;' + grades[i+1] + '<br>' : '+');
       }
 
