@@ -22,17 +22,13 @@ function chooseColor(mag) {
   if (mag > 5.0) {
     return "red";
   }  
-  else if (mag > 4.5) {
+  
+  else if (mag > 4.0) {
     return "orange";
   }
-  else if (mag > 4.0) {
-    return "yellow";
-  }
-  else if (mag > 3.5) {
-    return "#D4E4F7";
-  }
+  
   else if (mag > 3.0) {
-    return "#AAC5F9";
+    return "yellow";
   }  
 
   else if (mag > 2.0) {
@@ -96,9 +92,9 @@ d3.json(link).then(function(data) {
   legend.onAdd = function (map) {
 
       var div = L.DomUtil.create('div', 'info legend'),
-          grades = [0,2.0,3.0,3.5,4.0,4.5,5.0],
+          grades = [0,2.0,3.0,4.0,5.0],
           labels = [];
-          colors = ["blue", "#236AB9", "#AAC5F9", "#D4E4F7", "yellow", "orange", "red"]
+          colors = ["blue", "#236AB9", "yellow", "orange", "red"]
 
       // loop through our mag and generate a label with a color for each interval.  code gathered from https://leafletjs.com/examples/choropleth/
       for (var i = 0; i < grades.length; i++) {
